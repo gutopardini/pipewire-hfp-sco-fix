@@ -40,3 +40,53 @@ index 7c5fcefa8..bc5ce66e1 100644
  		rfcomm->hfp_ag_initial_codec_setup = HFP_AG_INITIAL_CODEC_SETUP_NONE;
  		codec_switch_start_timer(rfcomm, HFP_CODEC_SWITCH_TIMEOUT_MSEC);
  	} else if (spa_strstartswith(buf, "AT+BIA=")) {
+diff --git a/spa/plugins/bluez5/bluez5-dbus.c b/spa/plugins/bluez5/bluez5-dbus.c
+index 34b39a98f..8ee004eef 100644
+--- a/spa/plugins/bluez5/bluez5-dbus.c
++++ b/spa/plugins/bluez5/bluez5-dbus.c
+@@ -3466,7 +3466,9 @@ static void spa_bt_transport_do_release(struct spa_bt_transport *transport)
+ 
+ 	if (transport->acquire_refcount == 1) {
+ 		if (!transport->keepalive) {
++			transport->releasing = true;
+ 			spa_bt_transport_impl(transport, release, 0);
++			transport->releasing = false;
+ 			transport->acquired = false;
+ 		} else {
+ 			spa_log_debug(monitor->log, "transport %p: keepalive %s on release",
+@@ -3515,7 +3517,9 @@ static int spa_bt_transport_release_now(struct spa_bt_transport *transport)
+ 		return 0;
+ 
+ 	spa_bt_transport_stop_release_timer(transport);
++	transport->releasing = true;
+ 	res = spa_bt_transport_impl(transport, release, 0);
++	transport->releasing = false;
+ 	if (res >= 0) {
+ 		transport->acquire_refcount = 0;
+ 		transport->acquired = false;
+diff --git a/spa/plugins/bluez5/defs.h b/spa/plugins/bluez5/defs.h
+index 5e69bb757..84f7c5ffa 100644
+--- a/spa/plugins/bluez5/defs.h
++++ b/spa/plugins/bluez5/defs.h
+@@ -690,6 +690,7 @@ struct spa_bt_transport {
+ 
+ 	int acquire_refcount;
+ 	bool acquired;
++	bool releasing;
+ 	bool keepalive;
+ 	int error_count;
+ 	uint64_t last_error_time;
+diff --git a/spa/plugins/bluez5/media-sink.c b/spa/plugins/bluez5/media-sink.c
+index 15998a441..ffb47ddbf 100644
+--- a/spa/plugins/bluez5/media-sink.c
++++ b/spa/plugins/bluez5/media-sink.c
+@@ -2466,7 +2466,8 @@ static void transport_state_changed(void *data,
+ 	else
+ 		transport_stop(this);
+ 
+-	if (state < SPA_BT_TRANSPORT_STATE_ACTIVE && was_started && !this->is_duplex && this->is_output) {
++	if (state < SPA_BT_TRANSPORT_STATE_ACTIVE && was_started && !this->is_duplex && this->is_output &&
++			!this->transport->releasing) {
+ 		/*
+ 		 * If establishing connection fails due to remote end not activating
+ 		 * the transport, we won't get a write error, but instead see a transport

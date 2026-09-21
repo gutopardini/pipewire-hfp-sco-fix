@@ -42,11 +42,13 @@ Expected signals include `reusing pending transport`, `sco_ready`, `acquire comp
 
 ## Consecutive captures
 
-Run at least two captures without restarting PipeWire. The second capture is important: it checks that an already active transport is not incorrectly treated as a pending connection.
+Run at least four short captures without restarting PipeWire, allowing the automatic profile restore between captures. This exercises both the pending-SCO path and repeated HFP release/reacquire cycles.
+
+The expected result is that every WAV has a non-zero duration, the active profile returns to `a2dp-sink`, and normal releases do not produce `Failure in Bluetooth audio transport`. An unexpected SCO disconnect should still be reported as an error.
 
 ## Browser test
 
-Fully exit and reopen the browser after restarting PipeWire. On WhatsApp Web, start a voice message, speak for several seconds, stop and send it. Repeat once. Confirm that the profile switches to HFP and returns to A2DP after capture ends.
+Fully exit and reopen the browser after restarting PipeWire. On WhatsApp Web, start a voice message, speak for several seconds, stop and send it. Repeat at least four times. Confirm that the profile switches to HFP and returns to A2DP after each capture, and that every message contains audio.
 
 ## Report template
 
@@ -56,5 +58,5 @@ Include:
 - distribution, kernel, PipeWire, WirePlumber and BlueZ versions;
 - Bluetooth adapter model;
 - active profiles before/during/after capture;
-- whether the first and second captures contain audio;
-- the relevant log lines, especially `Too many links`, `SCO socket error`, `sco_ready` and `decode_data`.
+- whether four consecutive captures contain audio;
+- the relevant log lines, especially `Too many links`, `SCO socket error`, `Failure in Bluetooth`, `sco_ready` and `decode_data`.
