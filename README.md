@@ -2,7 +2,7 @@
 
 Correções experimentais para o backend Bluetooth HFP nativo do PipeWire. Os problemas podem fazer o microfone de fones Bluetooth desaparecer ou gravar áudio vazio em aplicações como WhatsApp Web quando o sistema troca de A2DP para HFP/mSBC ou repete rapidamente o ciclo de captura.
 
-> Status: experimental. Testado com Fedora 44, PipeWire 1.6.9, WirePlumber 0.5.17, BlueZ 5.87 e Baseus Bass EP10 Pro. Ainda não é uma correção oficial do PipeWire.
+> Status: experimental. O patch de 1.6.9 foi testado no Fedora 44. Nesta máquina, o Fedora 45 passou o PipeWire para 1.6.11 e o mesmo ajuste foi recompilado; o uso diário ficou no microfone digital do notebook com o fone em A2DP. Ainda não é uma correção oficial do PipeWire. O estado atual está em [docs/estado-atual.md](docs/estado-atual.md).
 
 ## O problema
 
@@ -112,8 +112,8 @@ O roteiro detalhado está em [docs/validation.md](docs/validation.md). A valida�
 
 - O patch foi validado em um único headset e ainda precisa de testes com outros fabricantes.
 - O cenário mais provável é HFP como Audio Gateway usando mSBC; outros papéis, CVSD e codecs adicionais precisam ser testados.
-- O patch é específico da versão 1.6.9 neste repositório.
-- O uso de `SPA_PLUGIN_DIR` é local à sessão do usuário e pode precisar ser reativado após logout/reboot.
+- O patch de 1.6.9 não se aplica em 1.6.11. A versão recompilada está em `patches/pipewire-1.6.11-hfp-pending-sco.patch`.
+- `SPA_PLUGIN_DIR` definido só na sessão some no logout. Nesta máquina ele está num drop-in do systemd do usuário; ver [docs/estado-atual.md](docs/estado-atual.md).
 
 ## English summary
 
